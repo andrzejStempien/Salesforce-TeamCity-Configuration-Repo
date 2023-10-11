@@ -1,0 +1,960 @@
+// USEFUL COMMANDS
+
+sfdx force:source:deploy -p [filepath]
+sfdx force:source:push
+sfdx config:set
+sfdx force:org:list --all
+sfdx force:logout -u SVP
+sfdx force:config:set defaultdevhubusername=andrzej.stempien@mindful-otter-lc8xlr.com -g
+sfdx force:org:delete -u orgName
+sfdx force:org:open
+
+// LWC GENERAL
+
+The reference for both Aura and Lightning web components and how to use them is found at 
+https://developer.salesforce.com/docs/component-library/overview/components. 
+You can view the library through your org's instance, too, at 
+http://<MyDomainName>.lightning.force.com/docs/component-library. 
+By viewing the library through your instance, you see only the correct version for your org. 
+And, as you create your own custom components, they appear in the library too.
+
+All Lightning web components have a namespace that's separated from the folder name by a hyphen. 
+For example, the markup for the Lightning web component with the folder name app in the 
+default namespace c is <c-app>.
+
+Use camel case to name your component myComponent. Camel case component folder names map to kebab-case in markup. 
+In markup, to reference a component with the folder name myComponent, use <c-my-component>.
+
+You can use if:false and if:true 
+conditional directives within your template to determine which visual elements are rendered.
+
+// HOOKS IN DOM
+
+The connectedCallback() method is one of our lifecycle hooks. You'll learn more about lifecycle hooks in the next section. 
+For now, know that the method is triggered when a component is inserted in the document object model (DOM). 
+In this case, it starts the timer.
+
+
+Lightning Web Components provides methods that allow you to “hook” your code up to critical events in a component's lifecycle. 
+These events include when a component is:
+- Created
+- Added to the DOM
+- Rendered in the browser
+- Encountering errors
+- Removed from the DOM
+
+The connectedCallback() is invoked when a component is inserted into the DOM. 
+The disconnectedCallback() is invoked when a component is removed from the DOM.
+
+// DECORATORS
+
+Decorators are often used in JavaScript to modify the behavior of a property or function.
+To use a decorator, import it from the lwc module and place it before the property or function.
+There are 3 decorators @api, @wire, @track.
+You can import multiple decorators, but a single property or function can have only one decorator. 
+For example, a property can't have @api and @wire decorators.
+
+Examples of Lightning Web Components decorators include:
+
+@api: Marks a field as public. Public properties define the API for a component. 
+An owner component that uses the component in its HTML markup can access the components public properties. 
+All public properties are reactive, which means that the framework observes the property for changes. 
+When the property's value changes, the framework reacts and rerenders the component.
+
+@track: Tells the framework to observe changes to the properties of an object or to the elements of an array. 
+If a change occurs, the framework rerenders the component. All fields are reactive. If the value of a field 
+changes and the field is used in a template—or in the getter of a property used in a template—the framework 
+rerenders the component. You dont need to decorate the field with @track. Use @track only if a field contains 
+an object or an array and if you want the framework to observe changes to the properties of the object or to 
+the elements of the array. If you want to change the value of the whole property, you don't need to use @track.
+
+Prior to Spring20, you had to use @track to mark fields (also known as private properties) as reactive. 
+Youre no longer required to do that. Use @track only to tell the framework to observe changes to the properties 
+of an object or to the elements of an array. Some legacy examples may still use @track where it isnt needed, 
+but thats OK because using the decorator doesn't change the functionality or break the code.
+
+@wire: Gives you an easy way to get and bind data from a Salesforce org.
+
+<!-- app.html --> //USING TRACK TO RENDER VALUE/IMAGE FROM OTHER COMPONENT
+<template>
+<div>
+    <c-bike bike={bike}></c-bike>
+</div>
+</template>
+
+// LWC GENERAL
+
+Salesforce platform doesn't allow hyphens in the component folder or file names. 
+So we use camelCase naming conventions here.
+
+targets specify which types of Lightning pages the component can be added to in the Lightning App Builder.
+targetConfigs let you specify behavior specific to each type of Lightning page, including things like which 
+objects support the component.
+
+// EVENT HANDLING
+
+Information can be passed up using events and event listeners.
+
+// todoItem.js
+import { LightningElement } from 'lwc';
+...
+    nextHandler() {
+        this.dispatchEvent(new CustomEvent('next'));
+    }
+}
+
+For example, a child component like this one contains a nextHandler() method that creates a simple event object 
+using CustomEvent() and dispatches the event type 'next' when the user clicks a Next button.
+
+The parent component listens for the event with the inline event handler prefixed with 'on'(onnext).
+
+<!-- todoApp.html -->
+<template>
+    <c-todo-item onnext={nextHandler}></c-todo-item>
+</template>
+
+And passes the event object to an event handler.
+
+// todoApp.js
+import { LightningElement } from 'lwc';
+export default class TodoApp extends LightningElement {
+...
+nextHandler(){
+        this.page = this.page + 1; // passing event object to an event handler
+    }
+}
+
+// PASSING IINFORMATION DOWN 
+
+Information can be passed down using public properties and public methods.
+
+You can make a component property public by prefacing it with the @api decorator. 
+Then, set the public property by an external component.
+
+You can make a component property public by prefacing it with the @api decorator. Then, set the public property by an external component.
+
+For example, if the c-todo-item child component has the following:
+
+// todoItem.js
+import { LightningElement, api } from 'lwc';
+export default class TodoItem extends LightningElement {
+   @api itemName;
+}
+Set the value from the parent with the following:
+
+<!-- todoApp.html -->
+<template>
+    <c-todo-item item-name="Milk"></c-todo-item>
+</template>
+
+Notice that the itemName variable gets set using the kebab case attribute item-name. 
+Property names in JavaScript are in camel case while HTML attribute names are in kebab case (dash-separated) to 
+match HTML standards. 
+
+The item-name attribute in markup maps to the itemName JavaScript property.
+
+Public properties are great solutions for passing down primitive values, simple objects, and arrays.
+
+Also, you can use getters & setters to execute some logic when properties are get or set. And remember, annotate them with the @api decorator to make them public for other components.
+
+Similarly, you can create public methods that are callable from a parent component. 
+Create a public method in the child component by defining it with the @api decorator, 
+then call it from the parent component.
+
+Similarly, you can create public methods that are callable from a parent component. Create a public method in the child component by defining it with the @api decorator, then call it from the parent component.
+
+Let's say that we have a child component like this one.
+
+// videoPlayer.js
+import { LightningElement, api } from 'lwc';
+export default class VideoPlayer extends LightningElement {
+   @api
+   play() {
+       // Play music!
+   }
+}
+When the c-video-player component is included in a parent component, we can invoke the method from the 
+parent component like this:
+
+// methodCaller.js
+import { LightningElement } from 'lwc';
+export default class MethodCaller extends LightningElement {
+   handlePlay() {
+      this.template.querySelector('c-video-player').play();
+   }
+}
+
+We defined a method handlePlay() that fires the event. Then we use the querySelector() DOM method to 
+search for a DOM element called c-video-player and invoke its public method.
+
+// HANDLING EVENTS IN HTML
+
+So our selector app needs to handle one type of event—the user clicking a tile. 
+When this happens, the detail component should re-render with the information from the related tile. 
+You can handle events in HTML (add an event listener in the template) or JavaScript (write an event listener function). 
+We recommend using the HTML approach, as follows.
+
+Each tile component listens for the user click because the tile component's HTML (tile.html) contains an onclick event listener.
+
+<template>
+    <div class="container">
+        <a onclick={tileClick}>
+            <div class="title">{product.fields.Name.value}</div>
+            <img class="product-img" src={product.fields.Picture_URL__c.value}></img>
+        </a>
+    </div>
+</template>
+
+When a user clicks one of the tile instances in the UI, the onclick listener calls the handler function tileClick in the tile.js JavaScript file.
+
+import { LightningElement, api } from 'lwc';
+export default class Tile extends LightningElement {
+    @api product;
+    tileClick() {
+        const event = new CustomEvent('tileclick', {
+            // detail contains only primitives
+            detail: this.product.fields.Id.value
+        });
+        // Fire the event from c-tile
+        this.dispatchEvent(event);
+    }
+}
+
+// GETTER AND SETTERS 
+
+Getters and setters are a common JavaScript construction. They allow you to add logic and conditions to property assignments.
+
+import { LightningElement, api } from 'lwc';
+import { bikes } from 'c/data';
+export default class Detail extends LightningElement {
+    product;
+    // Private var to track @api productId
+    _productId = undefined;
+    // Use set and get to process the value every time it's
+    // requested while switching between products
+    set productId(value) {
+        this._productId = value;
+        this.product = bikes.find(bike => bike.fields.Id.value === value);
+    }
+    // getter for productId
+    @api get productId(){
+        return this._productId;
+    }
+}
+
+Lightning Web Components encapsulates components, keeping them separate from the global DOM. 
+We do this through a mechanism called Shadow DOM. Shadow DOM is a common implementation that allows a component's 
+elements to live in a “sub tree” of the DOM (learn more about Shadow DOM in the link provided in the Resources 
+section). The component can keep its appearance and behavior within other apps or as a child of another component.
+
+// WIRE DECORATOR
+
+The wire service is part of our platform and delivers a stream of data. The @wire decorator, which we mentioned briefly before, implements the wire service for your app. To use the wire service, do the following.
+
+Import a wire adapter in the JavaScript file.
+Decorate a property or function with the @wire decorator.
+Here's the syntax.
+
+import { adapterId } from 'adapter-module';
+@wire(adapterId, adapterConfig)
+propertyOrFunction;
+adapterId (Identifier)—The identifier of the wire adapter.
+adapter-module (String)—The identifier of the module that contains the wire adapter function.
+adapterConfig (Object)—A configuration object specific to the wire adapter.
+propertyOrFunction—A private property or function that receives the stream of data from the wire service. 
+If a property is decorated with @wire, the results are returned to the property's data property or error property. 
+If a function is decorated with @wire, the results are returned in an object with 
+a data property and an error property.
+
+// Lightning Data service
+
+The easiest way to work with single records in Lightning web components is to use the 
+lightning-record-*-form components. These base components use Lightning Data Service behind the scenes and 
+inherit its caching and synchronization capabilities. Each base component gives you different features and 
+levels of customization.
+
+lightning-record-form base component is the simplest one. With lightning-record-form, 
+you can specify a layout and allow admins to configure form fields declaratively. 
+You can also specify an ordered list of fields to programmatically define what’s displayed. 
+
+lightning-record-form allows you to view and edit records.
+lightning-record-view-form base component allows you to view records.
+lightning-record-edit-form base component allows you to edit records.
+
+Choose lightning-record-view-form or lightning-record-edit-form when you need to customize the form layout, 
+prepopulate field values, or change how record data is rendered.
+
+Here’s an example that uses lightning-record-form to create accounts.
+
+accountCreator.html
+
+<template>
+    <lightning-card>
+        <lightning-record-form
+            object-api-name={objectApiName}
+            fields={fields}
+            onsuccess={handleSuccess}>
+        </lightning-record-form>
+    </lightning-card>
+</template>
+
+accountCreator.js
+
+import { LightningElement } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import ACCOUNT_OBJECT from '@salesforce/schema/Account';
+import NAME_FIELD from '@salesforce/schema/Account.Name';
+import REVENUE_FIELD from '@salesforce/schema/Account.AnnualRevenue';
+import INDUSTRY_FIELD from '@salesforce/schema/Account.Industry';
+export default class AccountCreator extends LightningElement {
+    objectApiName = ACCOUNT_OBJECT;
+    fields = [NAME_FIELD, REVENUE_FIELD, INDUSTRY_FIELD];
+    handleSuccess(event) {
+        const toastEvent = new ShowToastEvent({
+            title: "Account created",
+            message: "Record ID: " + event.detail.id,
+            variant: "success"
+        });
+        this.dispatchEvent(toastEvent);
+    }
+}
+
+If you need more customization than the lightning-record-*-form components provide, 
+you can invoke Lightning Data Service directly by using a wire adapter or JavaScript function. 
+
+Use a wire adapter to read Salesforce data (records) and metadata (layout details, fields on an object, and so on). To use them, decorate a property or function with @wire and specify the wire adapter.
+
+LDS wire adapters check the LDS cache first, and request data from the server only as needed. 
+Adapters react to change and refresh data accordingly. For example, when the parameter value changes, 
+or other components modify data in the Lightning Data Service cache, an adapter provisions the new data 
+to the wired property or function.
+
+import { LightningElement, api, wire } from 'lwc';
+import { getRecord } from 'lightning/uiRecordApi';
+import ACCOUNT_NAME_FIELD from '@salesforce/schema/Account.Name';
+export default class WireGetRecordProperty extends LightningElement {
+    @api recordId; // lets the parent component (the FlexiPage) pass the Id of the current record to the component.
+    @wire(getRecord, { recordId: '$recordId', fields: [ACCOUNT_NAME_FIELD] }) // wires a property
+    account;
+}
+
+If a record is retrieved, it’s stored in account.data. 
+If the record retrieval fails, the error is stored in account.error.
+
+The first time a value is assigned to the recordId property, the wire adapter gets the data from the server 
+and stores it in the LDS cache for future access. By passing the recordId parameter as a string with a $ prefix, 
+we make recordId reactive. Every time the value of recordId changes, the wire adapter gets new data, either from 
+the cache or from the server. If another component modifies the cached record, 
+the wire adapter provisions the record’s new value to the account property.
+
+We can decorate a function in the same way. This is useful when you want to execute some logic 
+over the returned records.
+
+// Wire function
+
+import { LightningElement, api, wire } from 'lwc';
+import { getRecord } from 'lightning/uiRecordApi';
+import ACCOUNT_NAME_FIELD from '@salesforce/schema/Account.Name';
+export default class WireGetRecord extends LightningElement {
+    @api recordId;
+    data;
+    error;
+    @wire(getRecord, { recordId: '$recordId', fields: [ACCOUNT_NAME_FIELD] })
+    wiredAccount({data, error}) {
+        console.log('Execute logic each time a new value is provisioned');
+        if (data) {
+            this.data = data; // assigning to unpack attributes
+            this.error = undefined;
+        } else if (error) {
+            this.error = error;
+            this.data = undefined;
+        }
+    }
+}
+
+LDS functions notify the LDS cache when records are created, updated, or deleted. 
+Consider this example, which uses the createRecord LDS function to create an account record.
+
+import { LightningElement} from 'lwc';
+import { createRecord } from 'lightning/uiRecordApi';
+import ACCOUNT_OBJECT from '@salesforce/schema/Account';
+import ACCOUNT_NAME_FIELD from '@salesforce/schema/Account.Name';
+export default class LdsCreateRecord extends LightningElement {
+    handleButtonClick() {
+        const recordInput = {
+            apiName: ACCOUNT_OBJECT.objectApiName,
+            fields: {
+                [ACCOUNT_NAME_FIELD.fieldApiName] : 'ACME'
+            }
+        };
+        createRecord(recordInput) // it returns a promise (a JavaScript object that simplifies performing asynchronous calls
+            .then(account => {
+                // code to execute if create operation is successful
+            })
+            .catch(error => {
+                // code to execute if create operation is not successful
+            });
+    }
+}
+
+Each function runs on its own independent transaction. Therefore, there is no common rollback logic.
+If you need a combined DML operation to be transactional, consider using Apex.
+
+// APEX METHODS WITH LWC
+
+An Apex method used in a Lightning web component must be static, public or global, 
+and annotated with @AuraEnabled immediately before the method definition. The @AuraEnabled annotation makes 
+the Apex method available to Lightning components (both Lightning web components and Aura components).
+
+Allowing the framework to cache data eliminates repeated server calls making future read operations run faster. 
+We mark a method as cacheable by setting cacheable = true in the @AuraEnabled annotation. 
+When an @AuraEnabled method is cacheable, Data Manipulation Language (DML) operations are not allowed. 
+
+public with sharing class ContactController {
+    @AuraEnabled(cacheable=true)
+    public static List<Contact> getContactsBornAfter(Date birthDate) {
+        return [
+            SELECT Name, Title, Email, Phone
+            FROM Contact
+            WHERE Birthdate > :birthDate
+            WITH SECURITY_ENFORCED
+       ];
+    }
+}
+
+When a method is cacheable, newly added or changed versions of records may not be returned until the cache is 
+refreshed.
+
+There are two ways to interact with Apex methods from Lightning web components: either wire the method 
+or call the method imperatively. Lets consider both approaches.
+
+To wire an Apex method, the method must be cacheable. To wire a cacheable Apex method, use the @wire decorator
+ (the same way you use an LDS wire adapter). Calling Apex this way delegates control to the Lightning Web Components
+  engine and creates a reactive service. Every time the value of a parameter that’s passed to the Apex method 
+  changes, the Apex method runs, provisioning the decorated property or function with the new value. 
+  Because wired methods must be cacheable, data can come from the LDS cache or the server. To refresh the data 
+  that was cached by an Apex method, call the refreshApex function.
+
+Note: Lightning Data Service is unaware of the data that's cached by Apex methods. When an LDS function updates 
+a record, that update has no impact on data that was cached by an Apex method.
+
+import { LightningElement, api, wire } from 'lwc';
+import getContactsBornAfter from '@salesforce/apex/ContactController.getContactsBornAfter'; // import function / method
+export default class WireApexProperty extends LightningElement {
+    @api minBirthDate;
+    @wire(getContactsBornAfter, { birthDate: '$minBirthDate' })
+    contacts;
+}
+
+We pass $minBirthDate as a reactive variable (starting with $).
+
+// CALL APEX IMPERATIVELY 
+
+An alternative to calling Apex with @wire is to call Apex imperatively. 
+Call Apex imperatively when you need to control the invocation of read operations, and when you modify records. 
+To call Apex imperatively, invoke the imported function from the component’s JavaScript file. 
+The function returns a JavaScript promise (as you do when you call an LDS function imperatively).
+
+You can call both cacheable and non-cacheable Apex methods imperatively. However, you cannot refresh 
+a cacheable Apex method imperatively. Instead, call the method using @wire and refresh it with refreshApex.
+
+In the callApexImperative.js example, when a user clicks a lightning-button in the .html file (not shown), 
+handleButtonClick calls the getContactsBornAfter Apex method imperatively.
+
+// IMPERATIVE APEX CALL
+
+import { LightningElement, api, wire } from 'lwc';
+import getContactsBornAfter from '@salesforce/apex/ContactController.getContactsBornAfter';
+export default class CallApexImperative extends LightningElement {
+    @api minBirthDate;
+    handleButtonClick() {
+        getContactsBornAfter({ //imperative Apex call returns a promise
+            birthDate: this.minBirthDate
+        })
+            .then(contacts => {
+                //code to execute if related contacts are returned successfully
+            })
+            .catch(error => {
+                //code to execute if related contacts are not returned successfully
+            });
+    }
+}
+
+If the Apex method call is successful, the promise is fulfilled and the then method runs. 
+Otherwise, the promise is rejected and the catch method runs.
+
+The preferred way to work with lists of records in Lightning web components is to use the 
+lightning-datatable base component. Use lightning-datatable to create tables of data with features such as 
+infinite scrolling, inline editing, header and row-level actions, resizing, and more. 
+This UI component needs to be fed data. The most common way to generate that data is to call Apex 
+in any of the ways explained earlier in this module.
+
+public with sharing class AccountController {
+    @AuraEnabled(cacheable=true) //We annotate the method with @AuraEnabled(cacheable=true) so that the results are cached.
+    public static List<Account> getAccounts() { // We define the getAccounts method in Apex, to perform a read operation and retrieve existing accounts.
+        return [
+            SELECT Name, AnnualRevenue, Industry
+            FROM Account
+            WITH SECURITY_ENFORCED
+            ORDER BY Name
+        ];
+    }
+}
+
+import { LightningElement, wire } from 'lwc';
+import NAME_FIELD from '@salesforce/schema/Account.Name';
+import REVENUE_FIELD from '@salesforce/schema/Account.AnnualRevenue';
+import INDUSTRY_FIELD from '@salesforce/schema/Account.Industry';
+import getAccounts from '@salesforce/apex/AccountController.getAccounts';
+const COLUMNS = [
+    { label: 'Account Name', fieldName: NAME_FIELD.fieldApiName, type: 'text' },
+    { label: 'Annual Revenue', fieldName: REVENUE_FIELD.fieldApiName, type: 'currency' },
+    { label: 'Industry', fieldName: INDUSTRY_FIELD.fieldApiName, type: 'text' }
+];
+export default class AccountList extends LightningElement {
+    columns = COLUMNS;
+    @wire(getAccounts)
+    accounts;
+}
+
+We store the result in the accounts property. If the operation succeeds, the records are accessible 
+on accounts.data. If it fails, the error surfaces in accounts.error.
+
+<template>
+    <lightning-card>
+        <template if:true={accounts.data}>
+            <lightning-datatable
+                key-field="Id"
+                data={accounts.data}
+                columns={columns}
+            >
+           </lightning-datatable>
+        </template>
+    </lightning-card>
+</template>
+
+// Making component available on pages
+
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>48.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+    </targets>
+</LightningComponentBundle>
+
+// HANDLING ERRORS IN LWC
+
+When you use @wire to decorate a property, errors are accessible on the property error attribute. 
+This is valid when you use @wire with an LDS wire adapter or with Apex.
+
+import { LightningElement, api, wire } from 'lwc';
+import { reduceErrors } from 'c/ldsUtils';
+import getContactsBornAfter from '@salesforce/apex/AccountController.getContactsBornAfter';
+export default class WireApexProperty extends LightningElement {
+    @api minBirthDate;
+    @wire(getContactsBornAfter, { birthDate: '$minBirthDate' })
+    contacts;
+    get errors() { // Every time this.contacts.error changes, the getter updates the value of the errors property. This occurs because of reactivity.
+        return (this.contacts.error) ?
+            reduceErrors(this.contacts.error) : [];
+    }
+}
+
+In the getter, we use the reduceErrors helper function to format this.contacts.error. 
+The function reduces the received error objects and returns an array of all the error messages that have occurred.
+
+When you use @wire to decorate a function, the function receives as a parameter an object that includes errors 
+(if there are any errors). This applies when you use @wire with either LDS wire adapters or Apex.
+
+import { LightningElement, api, wire } from 'lwc';
+import { reduceErrors } from 'c/ldsUtils';
+import getContactsBornAfter from '@salesforce/apex/AccountController.getContactsBornAfter';
+export default class WireApexFunction extends LightningElement {
+    @api minBirthDate;
+    errors;
+    @wire(getContactsBornAfter, { birthDate: '$minBirthDate' })
+    wiredContacts({data, error}) {
+        if (error)
+            this.errors = reduceErrors(error);
+    }
+}
+
+// Handling Errors When Calling a Function Imperatively
+
+If you call an LDS function or Apex method imperatively, the server returns errors as 
+a parameter to the catch methods callback function.
+
+import { LightningElement, api, wire } from 'lwc';
+import { reduceErrors } from 'c/ldsUtils';
+import getContactsBornAfter from '@salesforce/apex/AccountController.getContactsBornAfter';
+export default class CallApexImperative extends LightningElement {
+    @api minBirthDate;
+    errors;
+    handleButtonClick() {
+        getContactsBornAfter({
+            birthDate: this.minBirthDate
+        })
+            .then(contacts => {
+                // code to execute if the promise is resolved
+            })
+            .catch(error => {
+                this.errors = reduceErrors(error); // code to execute if the promise is rejected
+            });
+    }
+}
+
+// to throw an error by commenting the body of the method (temporarily), and adding this code in its place:
+throw new AuraHandledException('Forced error');
+
+Use Cases for Interacting with Salesforce Data
+
+Use Case
+Recommended Solution
+Notes
+View or edit a record
+
+Field positions are determined by the component.	lightning-record-form
+
+View a record
+
+You choose which fields to include and where to position them. You can also use standard rendering or provide your own rendering for each field.	lightning-record-view-form
+
+Edit a record
+
+You choose which fields to include and where to position them. You can also use standard rendering or provide your own rendering and value for each field.
+lightning-record-edit-form
+
+Read data for one or more records
+LDS wire adapters: getRecord or getRecords
+
+Create, edit, or delete one record
+LDS functions: createRecord, updateRecord or deleteRecord
+Can be combined, but operations run in independent transactions
+Create, edit, or delete multiple records
+Call Apex imperatively
+
+Read metadata for one or more records
+LDS wire adapters: getObjectInfo or getObjectInfos
+
+Read a related list’s metadata or records
+LDS wire adapters: getRelatedListInfo and  getRelatedListRecords (or the batch versions)
+
+Read a listview’s metadata
+LDS wire adapters: getListInfoByName (or the batch version)
+
+Use cases not covered by any of the above
+Call Apex with @wire or imperatively
+
+When you work with data in Lightning web components, error handling varies. How you access errors depends on how you’re interacting with the data.
+
+Handling Server Errors
+
+How to Work with Data
+
+How to Access Server Errors
+
+Use either an LDS wire adapter or an Apex method, and decorate a property
+Use reduceErrors to handle the error that’s returned to the wired property in decoratedProperty.error
+Use either an LDS wire adapter or an Apex method, and decorate a function
+Use reduceErrorsto handle the error that’s returned in the object parameter received by the wired function
+
+decoratedFunction({data, error}) {...}
+Imperatively invoke either an LDS wire function or an Apex method
+Use reduceErrorsto handle the error that’s received as a parameter on the catch method's callback function
+
+functionToInvoke()
+.then(data => {...})
+.catch(error => {...});
+
+Decorating a property with @track makes it private and reactive, 
+while to mark a property public and reactive, use @api.
+
+Both @track and @api mark a property as reactive. 
+- If the property’s value changes, the component rerenders.
+- Tracked properties are private, where properties decorated with @api are public and can be set by another component.
+- @track is powerful, but remember, track a property only if you want the component to rerender when the property’s value changes. Don’t track every private property.
+- We can’t decorate a property with both @track and @api.
+
+One of the first things you discover is that Lightning web components are compiled and minified. 
+Minification makes them smaller and faster for the browser to load. 
+But it also makes them challenging to troubleshoot. Minified code is especially hard to work with 
+because line breaks are removed and variable names are changed.
+
+// TROUBLESHOOTING LWC Components
+
+Enable Debug mode in Setup
+As a temporary workaround to work with breakpoints, turn off Lightning Web Security. Setup -> Session Settings -> uncheck box
+
+Perform an Empty Cache and Hard Reset
+
+To ensure turning off Lighting Web Security takes effect, 
+the browser cache needs to be cleared along with a hard reset of the browser.
+-> Right-click in the browser window and select Inspect.
+-> Right-click Reload and select Empty Cache and Hard Reset.
+
+// Chrome DevTools
+
+Right-click the browser window and select Inspect and then click the Sources tab.
+
+DevTools contains the DevTools Menu (1) and, when the Sources tab is selected, the Sources panel, which contains:
+The File Navigator pane (2) lists all files requested from this web page.
+The Code Editor pane (3) displays files selected in the File Navigator.
+The JavaScript Debugging pane (4) contains the Breakpoint control toolbar and several tools you can use to inspect JavaScript.
+
+- Use the Elements panel to view and change the DOM and CSS.
+- Use the Console panel to read messages such as those created with console.log(), 
+interact with variables, and run JavaScript.
+- Use the Sources panel to view and debug JavaScript files.
+
+Enable Custom Formatters
+Lightning web components use JavaScript proxies to enforce that certain types of data are read-only, primarily data that's provisioned via decorators (@api, @track, @wire). In Debug Mode, custom formatters manipulate the proxies into readable parts. Then in Chrome DevTools, you see the real value instead of the proxy. Let's enable the custom formatters.
+
+- In DevTools, click Settings (settings icon). The Preferences page opens.
+- Under Console, select Enable custom formatters.
+
+Use Ignore List
+Ignore List lets you ignore selected JavaScript files when using DevTools, so that you only pause on your own exceptions. This allows you to ignore framework code that you don't want to troubleshoot.
+
+In Settings, click Ignore List.
+Click Add pattern.
+Enter /aura_prod.*.js$ and then click Add.
+Click Add pattern.
+Enter /components/.*.js$ and then click Add.
+Close Settings.
+
+Locate the Lightning Web Components
+Under Sources, the Lightning web components are displayed in the File Navigator (under Page). All of the custom Lightning web components for the current page are in the modules/c folder.
+
+In DevTools, click the Sources tab.
+In the File Navigator, under Page, expand lightning/n and then modules/c.
+
+- Click display.js. The file opens in the Code Editor.
+
+- In display.js find class Display. (Click inside the Code window and press Ctrl+F (Windows) or 
+Cmd+F (macOS). In the Find box, enter class Display.)
+
+Notice that the code is compiled, but not minified, so the variable names are not changed.
+
+If you see only a few lines of code in the JavaScript file, then Debug Mode is not enabled in the org. 
+If enabling Debug Mode doesn't reset the code in the code editor, do a hard reload: 
+With DevTools open, right-click the browser Reload button and then click Hard Reload.
+
+// BREAKPOINTS
+
+If youve ever needed to pause your JavaScript code midstream to see what was happening, 
+then youve probably used the debugger command. And after you solved the problem, 
+you had to remove the debugger command before pushing the code to production. 
+Although there are times when the debugger command is necessary, there is a better way to get your code to pause. 
+Add breakpoints in DevTools while youre viewing the page in the browser. 
+Breakpoints are easier to set and they don't require code cleanup after using them.
+
+Breakpoints allow you to pause the JavaScript. While the code is paused, you can view the state of variables 
+and the conditions of your code. There are several types of breakpoints.
+
+Line-of-code breakpoints are great when you want to investigate a specific section of code. 
+Let's add a breakpoint that pauses before a selected line of code is executed.
+
+// *** EXAMPLE
+
+* Line-of-Code Breakpoints
+
+- In the DevTools Code Editor, find the handleIncrement(event) function.
+Click the line number for const operand = event.detail; inside the handleIncrement function. 
+A blue pointer highlights the line number to indicate that a breakpoint is set on that line.
+
+- The breakpoint is also shown under Breakpoints in the JavaScript Debugging pane on the right.
+Click +1 in the Solutions app. Code execution pauses at the breakpoint.
+
+- Notice the Paused in debugger indicator (1). The +1 button (2) is in the clicked state. 
+The Breakpoint control toolbar (3) indicates Paused on breakpoint. The Call Stack (4) lists two functions:
+handleIncrement and handleAdd. The blue arrow icon indicates that the debugger stopped at 
+the handleIncrement function. The line with the breakpoint is highlighted (5), showing where the debugger 
+paused at the breakpoint.
+
+Move your mouse pointer over operand. The Code Editor displays the value the variable holds before that line of code is executed.
+
+Now that the code execution is paused, you can step through it one line at a time, or you can skip over, 
+into, or out of a function. These options allow you to monitor control flow and property values 
+as you step through the code.
+
+The JavaScript Debugging pane includes the Breakpoint control toolbar with buttons for working with breakpoints.
+
+* Conditional Line-of-Code Breakpoints
+
+Use a conditional line-of-code breakpoint to pause only when the condition evaluates to true.
+
+1. Right-click the line number for this.counter += operand (below the breakpoint you added), 
+and select Add conditional breakpoint.
+2. Enter this.counter > 1 and then press Enter.
+The conditional breakpoint is indicated by an orange pointer highlight with a question mark (?) 
+to show that it's conditional.
+3. Move your mouse pointer over this.counter. Its value is 0, so it doesn't meet the condition of the conditional breakpoint.
+
+Under Breakpoints panel, you can disable or remove line-of-code breakpoints.
+
+Event Listener Breakpoints
+
+* Scroll down the JavaScript Debugging pane to find Event Listener Breakpoints. 
+Here you can set breakpoints to pause on the event listener code that runs after an event is fired. 
+There are many different options to select from. You can pause on a whole category of events, or pause 
+on only a specific type of event.
+
+*
+console.log() command. It's your friend on the inside that tells you whats happening while the JavaScript is running. It shows what variables are doing at different states in the script.
+
+Make the Solutions App Count by Two
+
+You've seen the Solutions app add one to the count each time you click +1. Now, use the Control Option to make the count increase by two.
+
+- Refresh the page in your browser. Your breakpoints should still be displayed.
+- If it isn't already open, open display.js in DevTools.
+- Find the handleAugmentorChange(event) function.
+- In the JavaScript Debugging pane expand Watch and click Add watch expression (Add icon).
+- Enter event.target.value and press Enter.event.target.value addedWatch displays:
+event.target.value: <not available>
+- Let's set a breakpoint and fire the event.
+- Click the line number for this.augmentor = event.target.value; to set a breakpoint.
+- In the Solutions app, under Control Option, select 2. Watch now shows that the value of event.target.value is “2”.Value of event.target.value is 2Because we're paused in the handleAugmentorChange event handler, the event.target.value is active and Watch shows its value.
+- In the JavaScript Debugging pane, add this.augmentor to Watch.this.augmentor: 1 added to WatchNotice that the value of this.augmentor is still 1. This line of code hasn't run yet.
+- Click Step (Step icon) to execute this line and step to the next line.DevTools screen corresponding to the description that followsNow execution is paused after the line with the breakpoint and Watch shows:
+event.target.value: "2"
+this.augmentor: "2"
+- Click Resume script execution (Resume script icon). Notice that the Solutions app's Controls buttons have changed to -2 and +2.Solution app's Controls buttons show -2 and +2
+
+
+typeof variable
+
+this.augmentor = parseInt(event.target.value) enforces integer, converts strings
+
+*** Bubbling allows the custom event from the button component to bubble up the DOM tree.
+
+  @api label;
+  @api icon;
+  handleButton(event) {
+    this.dispatchEvent(new CustomEvent('buttonclick',{
+      // bubbles: true
+    }));
+  }
+
+By default, a custom event doesnt bubble up past the component that dispatched it.
+
+
+  handleMaximizeCounter() {
+    this.template.querySelector('c-numerator').maximizeCounter();
+  }
+  
+  This function finds the c-numerator tag in augmentor.html and calls the public maximizeCounter function.
+
+or the additional functionality, we implement the counter property as a getter and setter 
+(get and set, also known as an accessor property). Then every time the counter is set,
+ we store the current counter value (_currentCount) in the priorCount variable before setting the new counter value.
+
+  _currentCount = 0;
+  priorCount = 0;
+  @api
+  get counter() {
+    return this._currentCount;
+  }
+  set counter(value) {
+    this.priorCount = this._currentCount;
+    this._currentCount = value;
+  }
+
+  // lightning messaging service
+  Lightning message service (LMS). LMS is a publish and subscribe service that facilitates communication between Lightning web components, Aura components, and Visualforce pages.  
+
+Use LMS for communication between unrelated components unless you control both components and a common parent. 
+LMS is powerful, effective, and easy to use, but dont let that tempt you to use it when its not necessary.
+ Firing DOM events is much more efficient. When you need to communicate between components with a parent that 
+ you cant control, such as two App Builder slots, Lightning message service is the perfect choice.
+
+ <?xml version="1.0" encoding="UTF-8" ?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>CountUpdated</masterLabel>
+    <isExposed>true</isExposed>
+    <description>Message Channel to pass Count updates</description>
+     <lightningMessageFields>
+        <fieldName>operator</fieldName>
+        <description>This is the operator type of the manipulation</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+         <fieldName>constant</fieldName>
+        <description>This is the number for the manipulation</description>
+     </lightningMessageFields>
+</LightningMessageChannel>
+
+
+import { LightningElement, wire } from 'lwc';
+import { publish, MessageContext } from 'lightning/messageService';
+import COUNT_UPDATED_CHANNEL from '@salesforce/messageChannel/Count_Updated__c';
+export default class RemoteControl extends LightningElement {
+  @wire(MessageContext)
+  messageContext;
+  handleIncrement() {
+    // this.counter++;
+    const payload = { 
+      operator: 'add',
+      constant: 1
+    };
+    publish(this.messageContext, COUNT_UPDATED_CHANNEL, payload);
+  }
+  handleDecrement() {
+    // this.counter--;
+    const payload = { 
+      operator: 'subtract',
+      constant: 1
+    };
+    publish(this.messageContext, COUNT_UPDATED_CHANNEL, payload);
+  }
+  handleMultiply(event) {
+    const factor = event.detail;
+     // this.counter *= factor;
+    const payload = { 
+      operator: 'multiply',
+      constant: factor
+    };
+    publish(this.messageContext, COUNT_UPDATED_CHANNEL, payload);
+  }
+}
+
+
+// subscriber to channel 
+
+import { LightningElement, wire } from 'lwc';
+import { subscribe, MessageContext } from 'lightning/messageService';
+import COUNT_UPDATED_CHANNEL from '@salesforce/messageChannel/Count_Updated__c';
+export default class Counts extends LightningElement {
+  subscription = null;
+  priorCount = 0;
+  counter = 0;
+  @wire(MessageContext)
+  messageContext;
+  subscribeToMessageChannel() {
+    this.subscription = subscribe(
+      this.messageContext,
+      COUNT_UPDATED_CHANNEL,
+      (message) => this.handleMessage(message)
+    );
+  }
+  handleMessage(message) {
+    this.priorCount = this.counter;
+    if(message.operator == 'add') {
+      this.counter += message.constant;
+    }else if(message.operator == 'subtract') {
+      this.counter -= message.constant;
+    } else {
+      this.counter *= message.constant;
+    }
+  }
+  connectedCallback() {
+    this.subscribeToMessageChannel();
+  }
+}
+
+// callback
+
+A JavaScript callback is a function which is to be executed after another function has finished execution. 
+A more formal definition would be - Any function that is passed as an argument to another function so that it 
+can be executed in that other function is called as a callback function.
