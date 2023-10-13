@@ -1,0 +1,58 @@
+kotlin
+Copy code
+import jetbrains.buildServer.configs.kotlin.v2019_2.*
+
+// Define a TeamCity project
+project {
+    // Project settings...
+
+    // Define a build configuration for Salesforce Sandbox Refresh
+    buildType {
+        // Build configuration settings...
+
+        name = "Salesforce Sandbox Refresh"
+        id = "SalesforceSandboxRefresh"
+
+        // VCS settings (use your Salesforce project's Git repository)
+        vcs {
+            // VCS settings...
+        }
+
+        steps {
+            // Step 1: Authenticate with Salesforce (Use your own Salesforce credentials)
+            script {
+                name = "Authenticate with Salesforce"
+                scriptContent = """
+                    sfdx force:auth:web:login -a my-sandbox-alias -r https://test.salesforce.com
+                    sfdx force:config:set defaultusername=my-sandbox-alias
+                """
+            }
+
+            // Step 2: Refresh the Salesforce Sandbox
+            script {
+                name = "Refresh Salesforce Sandbox"
+                scriptContent = """
+                    # Replace 'sandboxName' with your sandbox name
+                    sfdx force:org:refresh -u my-sandbox-alias -n sandboxName
+                """
+            }
+        }
+
+        // Build triggers and dependencies...
+    }
+}
+This is a basic example of a TeamCity build configuration for Salesforce Sandbox Refresh. Here are some key points to consider:
+
+In the VCS settings, configure the connection to your Salesforce project's version control system, typically Git.
+
+The Authenticate with Salesforce step uses the Salesforce CLI to log in to your Salesforce org. Replace my-sandbox-alias with your Salesforce alias and specify the correct Salesforce login URL (sandbox or production).
+
+The Refresh Salesforce Sandbox step uses the sfdx force:org:refresh command to refresh the sandbox. Replace sandboxName with the name of the sandbox you want to refresh.
+
+Configure build triggers and dependencies based on your CI/CD pipeline requirements.
+
+Make sure to configure your TeamCity build agent with Salesforce CLI and the necessary environment variables for authentication.
+
+This example assumes you are using Salesforce DX. Adjust the script content and commands according to your specific Salesforce deployment process.
+
+Remember that you need to adapt this configuration to your organization's Salesforce environment and CI/CD pipeline. Be sure to follow best practices for secure handling of credentials and secrets in your build process.

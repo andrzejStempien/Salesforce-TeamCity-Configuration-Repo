@@ -1,0 +1,49 @@
+Set up a Salesforce Project:
+
+Make sure you have a Salesforce project that contains the source code you want to deploy. This may involve using Salesforce DX and a version control system like Git.
+Install Required Tools:
+
+Ensure that TeamCity is installed and set up in your environment.
+Install Salesforce CLI on the TeamCity build agent(s) where the deployment will occur.
+Create a Salesforce DX Project:
+
+Create a Salesforce DX project in your TeamCity build agent workspace. This can be done using the sfdx force:project:create command.
+Authenticate with Salesforce:
+
+Use sfdx force:auth:web:login or sfdx force:auth:jwt:grant to authenticate your Salesforce org within your TeamCity environment. Ensure you set up the necessary environment variables to store the authentication details securely.
+Configure TeamCity Build Configuration:
+
+Open the TeamCity web interface and create a new build configuration.
+Configure the version control settings to connect to your Salesforce project's Git repository or whichever version control system you are using.
+Build Steps:
+
+Create build steps in TeamCity that execute Salesforce CLI commands to build, test, and package your Salesforce code.
+For example, you can use sfdx force:source:push to deploy source code to a Salesforce org and sfdx force:apex:test:run to run tests.
+Artifacts and Reports:
+
+Set up the build configuration to capture artifacts, such as deployment logs and test results, and store them in a designated location.
+Triggers and Dependencies:
+
+Configure build triggers and dependencies. For instance, you can set the build to trigger automatically upon code commits or other events, and specify dependencies on other builds if needed.
+Environment Variables:
+
+Ensure that any sensitive information like authentication tokens or passwords are stored as environment variables within TeamCity rather than hard-coded in your build scripts.
+Testing and Validation:
+
+Test the build configuration to ensure it works as expected. This may involve deploying code to a Salesforce sandbox or scratch org for validation.
+Error Handling and Notifications:
+
+Implement error handling in your build configuration, and configure notifications to alert you when there are build failures.
+Continuous Integration (CI) and Continuous Deployment (CD):
+
+If you're following a CI/CD pipeline, consider automating the deployment process to various environments, such as sandbox, UAT, or production, based on your organization's requirements.
+Version Control Hooks:
+
+Implement hooks in your version control system to trigger TeamCity builds automatically upon code changes, ensuring that your Salesforce deployment is always up-to-date.
+Documentation and Training:
+
+Document the TeamCity build configuration setup and provide training to your team members if necessary.
+Monitoring and Maintenance:
+
+Regularly monitor your CI/CD pipeline, review logs, and ensure that your Salesforce deployments continue to work as expected. Make necessary adjustments as Salesforce, Salesforce CLI, or TeamCity versions change.
+These steps can help you set up a TeamCity build configuration for Salesforce deployment, allowing you to automate the deployment process and ensure the reliability and consistency of your Salesforce code deployments.
